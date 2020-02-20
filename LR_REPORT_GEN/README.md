@@ -4,7 +4,7 @@ LARG is a web service that is used to automate the generation of Loadrunner repo
 
 ## Linux/MacOS Installation -- TO RUN LOCALLY -- LARG is hosted on AWS
 
-[LARG is here](http://loadrunnertestcomparisondash-env.miqvjcada7.us-west-2.elasticbeanstalk.com/)
+[LARG is here] _ currently down _ 
 
 First we must install the Python package manager [pip](https://pip.pypa.io/en/stable/) to install the required packages for LARG.
 
