@@ -1,15 +1,20 @@
-import plotly.graph_objects as go
-from bs4 import BeautifulSoup as BS
 import sys
-from datetime import datetime as DT
+import time
+import json
 import operator
 import csv
 import re
+
 import boto3
-import time
-import json
+import plotly.graph_objects as go
+from bs4 import BeautifulSoup as BS
+from datetime import datetime as DT
+
+
 
 ## Will take LoadRunner HTML Summary and convert it to a CSV ##
+## Then it takes the new data and uploads it to AWS S3 ##
+## Then lastly it restarts the elasticbeanstalk app to reflect new changes ##
 ## Path to where you want the csvs to be located ##
 ## By: Scott Hannan Aug 8th 2019 ##
 ## Hopefully this doesn't become obsolete haha ##

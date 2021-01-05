@@ -1,63 +1,66 @@
-### GENERATES THE BAR GRAPH AND THE TABLE IN THE COMPARISON TAB ###
-
 import plotly.graph_objects as go
 from dash.dependencies import Input, Output
 
-from lr_report_dataset import colors, db_data, LRLC
 import lr_report_classes
 from lr_report_init import app
+from lr_report_dataset import colors, db_data, LRLC
 
-
-
-## CALLBACK TO UPDATE THE BAR GRAPH BASED ON THE DROPDOWN MENUS
+# This callback updates the graphs visually based on new report selections.
 @app.callback(
   Output('barG', 'figure'),
   [Input('compare_1','value'),
-   Input('compare_2','value')])
+   Input('compare_2','value')]
+)
 
-def update_bar_graph(lr_report_1, lr_report_2):  
-  clrStrt = 0
+def update_bar_graph(lr_report_1: str, lr_report_2:str):  # Called every time a new report is chosen.
+  """Takes 2 loadrunner report names as args, returns a plotly bar object with 2 datasets."""
   bar = go.Figure()
-  bar.add_trace(create_bar_plot(lr_report_1, colors[clrStrt]))
-  clrStrt += 1
-  bar.add_trace(create_bar_plot(lr_report_2, colors[clrStrt]))
-  
-  bar.update_layout(autosize=False, margin=go.layout.Margin(l = 50, r= 50, b= 100, t=100, pad = 4), title_text="Total Runtime 90th Percentile Comparison <span style='color:deeppink'><b>" + lr_report_1 + "</b></span> vs <span style='color:deepskyblue'><b>" + lr_report_2 + "</b></span>")
+  bar.add_trace(create_bar_plot(lr_report_1, colors[0]))
+  bar.add_trace(create_bar_plot(lr_report_2, colors[1]))
+  bar.update_layout(autosize=False, margin=go.layout.Margin(l=50, r=50, b=100, t=100, pad=4), 
+                    title_text="Total Runtime 90th Percentile Comparison <span style='color:deeppink'><b>" 
+                    + lr_report_1 + "</b></span> vs <span style='color:deepskyblue'><b>" 
+                    + lr_report_2 + "</b></span>")
   return bar
-
-## HELPER METHOD - CREATES EACH SET OF BARS TO ADD TO THE GRAPH
-def create_bar_plot(lr_report, color):
-  lr_report_names = []
-  lr_report_data = []
-  lr_report_scores = []
+ 
+def create_bar_plot(lr_report:str, color): # Creates a single bar object.  This is called by update_bar_graph().
+  """Takes a loadrunner report names and a color, returns a single plotly bar object."""
+  lr_report_data = {} # values = [(names,scores)]
+  db_entry = []
 
   for report in db_data:
     if lr_report in report.lr_name:
-      lr_report_data=report
-  for i in range(len(lr_report_data.lr_moneymakers)):
-    lr_report_names.append(lr_report_data.lr_moneymakers[i].transaction_name)
-    lr_report_scores.append(lr_report_data.lr_moneymakers[i].nintieth_percentile)
+      lr_report_data[report.lr_name] = []
+      db_entry = report
 
-  bar_element = go.Bar(name="RELEASE: " + lr_report + " TOTAL", x = lr_report_names, y = lr_report_scores, text = lr_report_scores, textposition='auto',marker_color=color, marker_line_color=LRLC)
+  for i in range(len(db_entry.lr_moneymakers)):
+    lr_report_data[report].append(db_entry.lr_moneymakers[i].transaction_name, 
+                                  db_entry.lr_moneymakers[i].nintieth_percentile)
 
+  bar_element = go.Bar(name="RELEASE: " + lr_report + " TOTAL",
+                       x = lr_report_data.values()[0],
+                       y = lr_report_data.keys(), text = lr_report_data.values(), 
+                       textposition='auto', marker_color=color, marker_line_color=LRLC)
   return bar_element
 
-## CALLBACK TO UPDATE THE TABLE BASED ON THE DROPDOWN MENUS
+
+
+
+# This callback updates the table object based on selection of a new lr report.
 @app.callback(
   Output('compare_table', 'figure'),
   [Input('compare_1','value'),
    Input('compare_2','value')]
 )
-def update_comparison_table(lr_report_1 , lr_report_2):
-  clrStrt = 0
-  
-  lr_report_data_1 = []
-  lr_report_data_2 = []
-  lr_report_transaction_names_1 =[]
-  lr_ninety_1 = []
-  lr_report_transaction_names_2 =[]
-  lr_ninety_2 = []
-  transaction_names =[]
+
+def update_comparison_table(lr_report_1:str , lr_report_2:str):
+  """Takes two report names, returns a plotly table object"""
+  lr_report_data_1 = {} # values = [(names,scores)]
+  lr_report_data_2 = {}
+  db_entry_1 = []
+  db_entry_2 = []
+
+  transaction_names = []
   extra_names = []
   extra_lr_1_ninety = []
   extra_lr_2_ninety = []
@@ -65,38 +68,41 @@ def update_comparison_table(lr_report_1 , lr_report_2):
   
   for report in db_data:
     if lr_report_1 in report.lr_name:
-      lr_report_data_1 = report
+      lr_report_data_1[report.lr_name] = []
+      db_entry_1 = report
     if lr_report_2 in report.lr_name:
-      lr_report_data_2 = report
+      lr_report_data_2[report.lr_name] = []
+      db_entry_2 = report
   
-  for i in range(len(lr_report_data_1.lr_transactions)):
-    lr_report_transaction_names_1.append(lr_report_data_1.lr_transactions[i].transaction_name)
-  for i in range(len(lr_report_data_2.lr_transactions)):
-    lr_report_transaction_names_2.append(lr_report_data_2.lr_transactions[i].transaction_name)
+  for transaction in db_entry_1.lr_transactions:
+    lr_report_data_1[db_entry_1.lr_name].append((transaction.transaction_name, 
+                                                 transaction.nintieth_percentile)
+                                               )
+  for transaction in db_entry_2.lr_transactions:
+    lr_report_data_2[db_entry_2.lr_name].append((transaction.transaction_name, 
+                                                 transaction.nintieth_percentile)
+                                               )
   
-  ## FIND ALL TRANSACTIONS THAT PERSIST BETWEEN VERSIONS ##
   
-  for i in range(len(lr_report_transaction_names_1)):
-    for j in range(len(lr_report_transaction_names_2)):
-      if lr_report_transaction_names_1[i] == lr_report_transaction_names_2[j] and lr_report_transaction_names_1[i] not in transaction_names:
-        transaction_names.append(lr_report_transaction_names_1[i])
-        lr_report_transaction_names_1[i] = 0
-        lr_report_transaction_names_2[j] = 0
-        lr_ninety_1.append(lr_report_data_1.lr_transactions[i].nintieth_percentile)
-        lr_ninety_2.append(lr_report_data_2.lr_transactions[j].nintieth_percentile)
-        diff.append(lr_report_data_1.lr_transactions[i].nintieth_percentile - lr_report_data_2.lr_transactions[j].nintieth_percentile)
-        continue
+  for transaction_1 in lr_report_data_1.values(): # This finds the transactions common between versions.
+    for transaction_2 in lr_report_data_2.values():
+      if transaction_1[0] == transaction_2[0] and transaction_1[0] not in transaction_names:
+        transaction_names.append(transaction_1[0])
+        diff.append(transaction_1[1] - transaction_2[1])
+        transaction_1[1] = 0
+        transaction_2[1] = 0
   
   ## all transactions which are NOT zeroes will be appended to their respective 'extra' arrays ##
-  for i in range(len(lr_report_transaction_names_1)):
-    if lr_report_transaction_names_1[i] !=0:
-      extra_names.append(lr_report_transaction_names_1[i])
-      extra_lr_1_ninety.append(lr_report_data_1.lr_transactions[i].nintieth_percentile)
-      extra_lr_2_ninety.append('<b>N/A</b>')
-  for i in range(len(lr_report_transaction_names_2)):
-    if lr_report_transaction_names_2[i] !=0:
-      extra_names.append(lr_report_transaction_names_2[i])
-      extra_lr_2_ninety.append(lr_report_data_2.lr_transactions[i].nintieth_percentile)
+  for transaction in lr_report_data_1.values():
+    if transaction[1] !=0:
+      extra_names.append(transaction[0])
+      extra_lr_1_ninety.append(transaction[1])
+      extra_lr_2_ninety.append('<b>N/A</b>') 
+
+  for transaction in lr_report_data_2.values():
+    if transaction[1] !=0:
+      extra_names.append(transaction[0])
+      extra_lr_2_ninety.append(transaction[1])
       extra_lr_1_ninety.append('<b>N/A</b>')
 
 
@@ -105,15 +111,26 @@ def update_comparison_table(lr_report_1 , lr_report_2):
     if float(diff[i]) > 1.0:
       diff[i] = "<span style='color:deeppink'><b>%s</b></span>" %str(round(diff[i], 3))
     elif float(diff[i]) < -1.0:
-      diff[i] = "<span style='color:blue'><b>%s</b></span>" %str(round(diff[i],3))
+      diff[i] = "<span style='color:blue'><b>%s</b></span>" %str(round(diff[i], 3))
     else:
       diff[i] = str(round(diff[i], 3))
 
   ## CREATE THE TABLE
-  table = go.Figure( data =[go.Table(columnwidth = [150, 70, 70, 70], header = dict(values = ("Transaction Name", "R1 :Ninetieth Percentile " + lr_report_1, "R2: Ninetieth Percentile " + lr_report_2, "Diff (R1 - R2)"), fill_color = ['lightgray', colors[clrStrt], colors[clrStrt+1], 'lightgray'], font_color = ['black', 'black', 'black', 'black'] , align ='left'),
-                                     cells = dict(values = [transaction_names + extra_names , lr_ninety_1 + extra_lr_1_ninety, lr_ninety_2+extra_lr_2_ninety, diff], align = 'left'))
+  table = go.Figure(data =[go.Table(columnwidth = [150, 70, 70, 70], 
+                                    header = dict(values = ("Transaction Name", "R1 :Ninetieth Percentile " 
+                                                            + lr_report_1, "R2: Ninetieth Percentile " 
+                                                            + lr_report_2, "Diff (R1 - R2)"
+                                                          ), 
+                                                  fill_color = ['lightgray', colors[0], colors[1], 'lightgray'], 
+                                                  font_color = ['black', 'black', 'black', 'black'] , align ='left'
+                                                  ),
+                                    cells = dict(values = [transaction_names + extra_names, 
+                                                           lr_report_data_1.values()[0] + lr_report_data_1.values()[1], 
+                                                           lr_report_data_2.values()[0] + lr_report_data_2.values()[1], diff
+                                                          ], 
+                                                  align = 'left')
+                                    )
   ])
-
 
   return table
 

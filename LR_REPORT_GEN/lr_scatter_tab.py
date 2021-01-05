@@ -1,5 +1,3 @@
-### GENERATES THE SCATTER PLOT (LINE GRAPH) ###
-
 import plotly.graph_objects as go
 
 import lr_report_classes
@@ -25,13 +23,12 @@ def create_release_scatter(db_data):
   mmc = 0
 
   for report in db_data:
-    mmc = report.lr_money_maker_count
-    rel = report.lr_name
     for scenario in report.lr_transactions:
       if "_Total" in scenario.transaction_name:
         totals.append(scenario)
     
     moneymakers_per_report.append(mmc)
+
   ## Fill # of moneymaker lists of # of report entries ex. if 5 moneymakers and 10 reports it will be 5 lists each with 10 elements.
   scenario_percentiles = [[] for i in range (most_money_makers)]
   for i in range(most_money_makers):
@@ -39,11 +36,9 @@ def create_release_scatter(db_data):
       scenario_percentiles[i].append(db_official_report_list[j])
   report_num = 0
   scenario_num = 0
-  running_total = 0
   partition = totals[0].partition_0
   
 
-    ## works for 5 tests exclusively ##
   for i in range(len(totals)):
     
     ## if partition changes to another official partition ##

@@ -1,8 +1,3 @@
-## INITIALIZE THE DASH (flask) APPLICATION ##
-## SETS THE LAYOUT ##
-
-
-
 import dash
 from lr_report_dataset import external_stylesheets
 from lr_report_layout import layout

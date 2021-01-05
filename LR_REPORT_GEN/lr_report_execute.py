@@ -1,6 +1,5 @@
 from lr_report_init import application
 import lr_comparison_tab
-#import lr_report_init
 
 ###################################
 #      MADE BY SCOTT HANNAN       #

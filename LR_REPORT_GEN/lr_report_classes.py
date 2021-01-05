@@ -20,7 +20,7 @@ class LR_Report:
 
 class Transaction:
 
-  def __init__(self, scenario_data):
+  def __init__(self, scenario_data): 
     self.transaction_name = scenario_data[0]
     self.nintieth_percentile = scenario_data[1]
     self.partition_0 = scenario_data[2]
