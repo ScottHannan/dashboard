@@ -1,3 +1,14 @@
+# LR_CSV 
+
+This folder contains scripts to generate CSV files from the LoadRunner HTML reports. This is so the data can be easily worked with.
+
+# LR_GEN
+
+This folder contains all the source code for the full stack of the AWS-hosted web application.
+
+
+
+
 # AWS Hosted application deployment steps 
 This will give a basic tutorial on how to install the elastic beanstalk CLI and deploy a dash app.
 
